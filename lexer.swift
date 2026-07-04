@@ -63,7 +63,13 @@ func main() {
         print("ERROR: no input file provided")
         exit(33)
     }
-    let sourcefile = CommandLine.arguments[0]
+    let sourcefile = CommandLine.arguments[1]
+    let sourceurl = URL(fileURLWithPath: sourcefile)
+    guard let source = try? String(contentsOf: sourceurl) else {
+        print("ERROR: unable to read \(sourcefile)")
+        exit(33)
+    }
+    print(source)
 }
 
 
