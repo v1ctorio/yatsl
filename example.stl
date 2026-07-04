@@ -1,0 +1,18 @@
+# this constant would default to main.c but since it's public, it could be overridden like "run build! --filename somethingelse.c"
+ pub set filename "main.c"
+ 
+ pub proc build! {
+  
+   let compiler std::get_platform_compiler!
+   # which get_platform_c_compiler accepts an optional parameter for the OS. This would also work
+   # std::get_platform_c_compiler! std::get_os!
+  
+   let command cmd!compiler
+   |>cmd::arg!filename
+   |>cmd::arg!["--option", "value"]
+  
+  
+   command! # This runs the command
+   # by default (as it's a command runner, the output gets redirected. To capture it, you may `command![.captureStdout]` == `command![.captureStdout(true)]` and then `std::getStdout!commandReturnVal`
+}
+
