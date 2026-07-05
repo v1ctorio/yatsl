@@ -13,7 +13,7 @@ class Location {
 }
 extension Location: CustomStringConvertible {
     var description: String {
-        return "Loc(r: \(row), c: \(col))"
+        return "Loc(r: \(row+1), c: \(col+1))"
     }
 }
 
@@ -32,7 +32,7 @@ enum TokenKind {
     case     RCurly
     case   LBRacket
     case   RBracket
-    case   EOF
+    case        EOF
 }
 
 class Token {
