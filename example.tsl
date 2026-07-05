@@ -8,8 +8,8 @@
    # std::get_platform_c_compiler! std::get_os!
   
    let command cmd!compiler
-   |>cmd::arg!filename
-   |>cmd::arg!["--option", "value"]
+   |> cmd::arg!filename
+   |> cmd::arg!["--option", "value"]
   
   
    command! # This runs the command
