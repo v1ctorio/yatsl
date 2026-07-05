@@ -3,9 +3,9 @@ import Foundation
 
 class Location {
     let file_path: String
-    let row: String
-    let col: String
-    init(f: String, r: String, c: String) {
+    let row: Int 
+    let col: Int 
+    init(f: String, r: Int, c: Int) {
         file_path = f
         row = r
         col = c
@@ -51,10 +51,47 @@ class Lexer {
         bol = 0
     }
 
+    func curI() -> String.Index {
+        return source.index(source.startIndex, offsetBy: cur)
+    }
+
+    func char()->Character {
+        return source[curI()]
+    } 
 
     func is_empty() -> Bool {
         return cur >= source.count
     }
+
+    func consume() {
+        if (!is_empty()) {
+            let c = char() //TODO maybe i could use String.Index for cursors instead of ints
+
+            cur += 1
+            if (c == "\n"){
+                bol = cur
+                row += 1
+            }
+        }
+    }
+
+    func trim_left() {
+        while(!is_empty() && char().isWhitespace) {
+            consume()
+        }
+    }
+    
+    func loc() -> Location {
+        return Location(f: file_path, r: row, c: cur - bol)
+    }
+
+
+    func next_token() {
+        trim_left()
+        
+        //TODO handle comments (drop line if it starts with #)
+    }
+
 } 
 
 func main() {
