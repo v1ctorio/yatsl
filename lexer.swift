@@ -23,7 +23,7 @@ class Location {
 }
 extension Location: CustomStringConvertible {
     var description: String {
-        return "Loc(r: \(row+1), c: \(col+1))"
+        return "\(file_path):\(row+1):\(col+1)"
     }
 }
 
