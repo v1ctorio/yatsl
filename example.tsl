@@ -12,7 +12,7 @@
    |> cmd::arg!["--option", "value"]
   
   
-   command! # This runs the command
+   command![.captureStdout] # This runs the command
    # by default (as it's a command runner, the output gets redirected. To capture it, you may `command![.captureStdout]` == `command![.captureStdout(true)]` and then `std::getStdout!commandReturnVal`
 }
 

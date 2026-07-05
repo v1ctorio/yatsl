@@ -42,6 +42,8 @@ enum TokenKind {
     case     RCurly
     case   LBracket
     case   RBracket
+    case     LParen
+    case     RParen
     case        EOF
 }
 
@@ -50,6 +52,8 @@ let singleCharTokenMap: [Character: TokenKind] = [
     "}": .RCurly,
     "[": .LBracket,
     "]": .RBracket,
+    "(": .LParen,
+    ")": .RParen,
     ",": .Colon
 ]
 
@@ -195,6 +199,19 @@ class Lexer {
 
             return Token(
                 .Identifier(addr: id, kind: .Interfix),
+                location
+            )
+        }
+
+        if first == "." {
+            consume()
+            assert(char().isValidIdentifierContent)
+
+            let id = consumeIdentifier(lexer: self)
+            debugP("tokenized atom: .\(id)")
+
+            return Token(
+                .Identifier(addr: id, kind:.Atom),
                 location
             )
         }
