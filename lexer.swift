@@ -11,6 +11,11 @@ class Location {
         col = c
     }
 }
+extension Location: CustomStringConvertible {
+    var description: String {
+        return "Loc(r: \(row), c: \(col))"
+    }
+}
 
 enum IdentifierKind {
     case Function   // functions end w/   ! [foo!]
