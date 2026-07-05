@@ -27,6 +27,7 @@ enum TokenKind {
     case     RCurly
     case   LBRacket
     case   RBracket
+    case   EOF
 }
 
 class Token {
@@ -77,6 +78,7 @@ class Lexer {
     func consume() {
         if (!is_empty()) {
             let c = char() //TODO maybe i could use String.Index for cursors instead of ints
+            debugP("consuming char#\(cur) [\(c.asciiValue ?? 69)]")
 
             cur += 1
             if (c == "\n"){
@@ -87,8 +89,10 @@ class Lexer {
     }
 
     func trim_left() {
+        debugP("trim_left(): trmming from \(char().asciiValue ?? 69)")
         while(!is_empty() && char().isWhitespace) {
             consume()
+            debugP("trim_left(): finished trimming up to loc = \(loc()); c = \(char().asciiValue!)")
         }
     }
     
@@ -100,13 +104,34 @@ class Lexer {
     func next_token() -> Token {
         trim_left()
 
+         
+        if char() == "#" {
+            debugP("comment(): detected, dropping line")
+            while !is_empty() {
+                if char() == "\n" {
+                    debugP("comment(): newline detected")
+                    if (!is_empty()) {
+                        consume()
+                        trim_left()
+                    }
+                    break
+                }
+                if !is_empty() {
+                    consume()
+                }
+            }
+        }
         
         //TODO handle comments (drop line if it starts with #)
         if is_empty() {
-            UNREACHABLE("TODO: handle empty token consumption")
+            return Token(.EOF, loc())
         } 
+        
         let location = loc()
         let first    = char()
+        debugP("next_token(): first = \(first.asciiValue ?? 69)")
+
+        
 
         if first.isLetter {
             let start_i = curI()
@@ -127,7 +152,7 @@ class Lexer {
 
         }
         
-        UNREACHABLE("not implemented")
+        UNREACHABLE("not implemented first = \(first.asciiValue)")
     }
 
 } 
@@ -145,11 +170,16 @@ func main() {
         exit(33)
     }
     print(source)
+    debugP("-----------")
 
     let lexer = Lexer(sourcefile, source)
     let tokens = tokenize(lexer)
+    
+    debugP("-----------")
+    var i = 0
     for token in tokens {
-        print(token.display())
+        print("\(i): \(token.display())")
+        i += 1
     }
 }
 
