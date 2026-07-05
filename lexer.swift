@@ -89,8 +89,8 @@ class Lexer {
     }
 
     func trim_left() {
-        debugP("trim_left(): trmming from \(char().asciiValue ?? 69)")
         while(!is_empty() && char().isWhitespace) {
+            debugP("trim_left(): trmming from \(char().asciiValue ?? 69)")
             consume()
             debugP("trim_left(): finished trimming up to loc = \(loc()); c = \(char().asciiValue!)")
         }
