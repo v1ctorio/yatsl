@@ -1,5 +1,15 @@
 import Foundation 
 
+//TODO use exceptions for lexing error and show pretty error msgs
+//TODO remove all debugP
+
+
+
+/*extension Character {
+    var isValidIdentifierContent: Bool {
+        return self.isLetter || self.isNumber || self == "!" 
+    } 
+}*/
 
 class Location {
     let file_path: String
@@ -127,7 +137,6 @@ class Lexer {
             }
         }
         
-        //TODO handle comments (drop line if it starts with #)
         if is_empty() {
             return Token(.EOF, loc())
         } 
@@ -148,16 +157,41 @@ class Lexer {
             }
             let val = String(source[start_i..<curI()])
             debugP("tokenized name: \(val)")
-            let id_kind = val.hasSuffix("!") ? IdentifierKind.Function : IdentifierKind.Container
             
+            var id_kind = IdentifierKind.Container
+            if char() == "!" {
+                id_kind = IdentifierKind.Function
+                consume()
+            }
+
             return Token(
                 .Identifier(addr: [val], kind: id_kind),
                 location
                 )
 
         }
+
+
+        if first == "\"" {
+            consume()
+            let start_i = curI()
+
+            while !is_empty() {
+                let c = char()
+                //TODO: support escaping
+                if c == "\"" { break }
+                consume()
+            }
+            if is_empty() {
+                UNREACHABLE("ERROR: expected string, found EOF")
+            }
+            let content = String(source[start_i..<curI()])
+            consume()
+
+            return Token(.String(content:content),location)
+        }
         
-        UNREACHABLE("not implemented first = \(first.asciiValue)")
+        UNREACHABLE("not implemented first = \(first.asciiValue ?? 69)")
     }
 
 } 
