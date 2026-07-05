@@ -12,22 +12,29 @@ class Location {
     }
 }
 
+enum IdentifierKind {
+    case Function   // functions end w/   ! [foo!]
+    case Interfix   // operators start w/ * [*foo]
+    case Atom       // atoms start w/     . [.foo]
+    case Containers // containers         ∅ [ foo]
+}
 
 enum TokenKind {
-    case TName
-    case TString
-    case TLCurly
-    case TRCurly
+    case Identifier(addr: [String], kind: IdentifierKind) // array for namespaces. `foo::bar` == ['foo','bar']
+    case     String(content: String)
+    case      Colon
+    case     LCurly
+    case     RCurly
+    case   LBRacket
+    case   RBracket
 }
 
 class Token {
     let kind: TokenKind
-    let value: String //TODO: aggregate type for values (?)
     let loc: Location
 
     init(_kind: TokenKind, _value: String, _loc: Location) {
         kind = _kind
-        value = _value
         loc = _loc
     }
 
