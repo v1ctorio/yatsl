@@ -5,11 +5,11 @@ import Foundation
 
 
 
-/*extension Character {
+extension Character {
     var isValidIdentifierContent: Bool {
-        return self.isLetter || self.isNumber || self == "!" 
+        return (self.isLetter || self.isNumber || self.isSymbol) && self != "!" && self != "|" && self != "."
     } 
-}*/
+}
 
 class Location {
     let file_path: String
@@ -29,7 +29,7 @@ extension Location: CustomStringConvertible {
 
 enum IdentifierKind {
     case Function   // functions end w/   ! [foo!]
-    case Interfix   // operators start w/ * [*foo]
+    case Interfix   // operators start w/ | [|foo]
     case Atom       // atoms start w/     . [.foo]
     case Container  // containers         ∅ [ foo]
 }
@@ -152,7 +152,7 @@ class Lexer {
             //TODO support namespaces (foo::bar)
             while !is_empty() {
                 let c = char()
-                if (!c.isLetter && !c.isNumber) { break }
+                if (!c.isValidIdentifierContent) { break }
                 consume()
             }
             let val = String(source[start_i..<curI()])
