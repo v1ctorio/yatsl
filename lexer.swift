@@ -16,7 +16,7 @@ enum IdentifierKind {
     case Function   // functions end w/   ! [foo!]
     case Interfix   // operators start w/ * [*foo]
     case Atom       // atoms start w/     . [.foo]
-    case Containers // containers         ∅ [ foo]
+    case Container  // containers         ∅ [ foo]
 }
 
 enum TokenKind {
@@ -99,10 +99,35 @@ class Lexer {
 
     func next_token() -> Token {
         trim_left()
+
         
         //TODO handle comments (drop line if it starts with #)
-        print("PANIC: NOTIMPLEMENTEDDDDDDDDDDDDD")
-        exit(69)
+        if is_empty() {
+            UNREACHABLE("TODO: handle empty token consumption")
+        } 
+        let location = loc()
+        let first    = char()
+
+        if first.isLetter {
+            let start_i = curI()
+            //TODO support namespaces (foo::bar)
+            while !is_empty() {
+                let c = char()
+                if (!c.isLetter && !c.isNumber) { break }
+                consume()
+            }
+            let val = String(source[start_i..<curI()])
+            debugP("tokenized name: \(val)")
+            let id_kind = val.hasSuffix("!") ? IdentifierKind.Function : IdentifierKind.Container
+            
+            return Token(
+                .Identifier(addr: [val], kind: id_kind),
+                location
+                )
+
+        }
+        
+        UNREACHABLE("not implemented")
     }
 
 } 
@@ -139,3 +164,15 @@ func tokenize(_ lexer: Lexer) -> [Token] {
     return tokens 
 }  
 main()
+
+
+func UNREACHABLE(_ msg: String) -> Never {
+    print("""
+    UNREACHABLE REACHED (???): \(msg)
+    """)
+    exit(69)
+}
+
+func debugP(_ msg: String) {
+    print(msg)
+}
