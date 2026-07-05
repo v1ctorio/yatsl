@@ -7,7 +7,7 @@ import Foundation
 
 extension Character {
     var isValidIdentifierContent: Bool {
-        return (self.isLetter || self.isNumber || self.isSymbol) && self != "!" && self != "|" && self != "."
+        return (self.isLetter || self.isNumber || self.isSymbol || self == "_") && self != "!" && self != "|" && self != "."
     } 
 }
 
@@ -50,6 +50,7 @@ let singleCharTokenMap: [Character: TokenKind] = [
     "}": .RCurly,
     "[": .LBracket,
     "]": .RBracket,
+    ",": .Colon
 ]
 
 class Token {
@@ -114,7 +115,11 @@ class Lexer {
         while(!is_empty() && char().isWhitespace) {
             debugP("trim_left(): trmming from \(char().asciiValue ?? 69)")
             consume()
-            debugP("trim_left(): finished trimming up to loc = \(loc()); c = \(char().asciiValue!)")
+            if (is_empty()) {
+                debugP("trim_left(): finished trimming up to EOF")
+            } else {
+                debugP("trim_left(): finished trimming up to loc = \(loc()); c = \(char().asciiValue!)")
+                }
         }
     }
     
@@ -125,9 +130,12 @@ class Lexer {
 
     func next_token() -> Token {
         trim_left()
-
+        
+        if is_empty() {
+            return Token(.EOF, loc())
+        } 
          
-        if char() == "#" {
+        while char() == "#" {
             debugP("comment(): detected, dropping line")
             while !is_empty() {
                 if char() == "\n" {
@@ -143,11 +151,12 @@ class Lexer {
                 }
             }
         }
-        
+
         if is_empty() {
             return Token(.EOF, loc())
         } 
         
+
         let location = loc()
         let first    = char()
         debugP("next_token(): first = \(first.asciiValue ?? 69)")
@@ -160,14 +169,8 @@ class Lexer {
         //TODO extract address consumption into a general function
 
         if first.isLetter {
-            let start_i = curI()
-            //TODO support namespaces (foo::bar)
-            while !is_empty() {
-                let c = char()
-                if (!c.isValidIdentifierContent) { break }
-                consume()
-            }
-            let val = String(source[start_i..<curI()])
+
+            let val = consumeIdentifier(lexer: self)
             debugP("tokenized name: \(val)")
             
             var id_kind = IdentifierKind.Container
@@ -177,7 +180,7 @@ class Lexer {
             }
 
             return Token(
-                .Identifier(addr: [val], kind: id_kind),
+                .Identifier(addr: val, kind: id_kind),
                 location
                 )
 
@@ -186,17 +189,12 @@ class Lexer {
         if first == "|" {
             consume()
             assert(char().isValidIdentifierContent)
-            let start_i = curI()
 
-            while !is_empty() {
-                if (!char().isValidIdentifierContent) { break }
-                consume()
-            }
-            let id = String(source[start_i..<curI()])
+            let id = consumeIdentifier(lexer: self)
             debugP("tokenized interfix: \(id)")
 
             return Token(
-                .Identifier(addr: [id], kind: .Interfix),
+                .Identifier(addr: id, kind: .Interfix),
                 location
             )
         }
@@ -275,4 +273,38 @@ func UNREACHABLE(_ msg: String) -> Never {
 
 func debugP(_ msg: String) {
     print(msg)
+}
+
+func consumeIdentifier(lexer: Lexer) -> [String] {
+    var id = [String]()
+    assert(!lexer.is_empty())
+    assert(lexer.char().isValidIdentifierContent)
+    while !lexer.is_empty() {
+        let name = consumeName(lexer: lexer)
+        id.append(name)
+        if lexer.char() == ":" {
+            lexer.consume()
+            assert(!lexer.is_empty())
+            assert(lexer.char() == ":", "expected a second colon after the first")
+            lexer.consume()
+        } else {
+            break
+        }
+    }
+
+    return id
+}
+
+func consumeName(lexer: Lexer) -> String {
+    assert(lexer.char().isValidIdentifierContent)
+    
+    let start_i = lexer.curI()
+    while !lexer.is_empty() {
+        let c = lexer.char()
+        if (!c.isValidIdentifierContent) { break }
+        lexer.consume()
+    }
+
+    let name = String(lexer.source[start_i..<lexer.curI()])
+    return name
 }
