@@ -2,7 +2,7 @@ import Foundation
 
 //TODO use exceptions for lexing error and show pretty error msgs
 //TODO remove all debugP
-
+//TODO support for atom values (and parenthesis)
 
 
 extension Character {
@@ -40,10 +40,17 @@ enum TokenKind {
     case      Colon
     case     LCurly
     case     RCurly
-    case   LBRacket
+    case   LBracket
     case   RBracket
     case        EOF
 }
+
+let singleCharTokenMap: [Character: TokenKind] = [
+    "{": .LCurly,
+    "}": .RCurly,
+    "[": .LBracket,
+    "]": .RBracket,
+]
 
 class Token {
     let kind: TokenKind
@@ -145,7 +152,12 @@ class Lexer {
         let first    = char()
         debugP("next_token(): first = \(first.asciiValue ?? 69)")
 
-        
+        if let k = singleCharTokenMap[first] {
+            consume()
+            return Token(k, location)
+        } 
+
+        //TODO extract address consumption into a general function
 
         if first.isLetter {
             let start_i = curI()
@@ -170,6 +182,25 @@ class Lexer {
                 )
 
         }
+
+        if first == "|" {
+            consume()
+            assert(char().isValidIdentifierContent)
+            let start_i = curI()
+
+            while !is_empty() {
+                if (!char().isValidIdentifierContent) { break }
+                consume()
+            }
+            let id = String(source[start_i..<curI()])
+            debugP("tokenized interfix: \(id)")
+
+            return Token(
+                .Identifier(addr: [id], kind: .Interfix),
+                location
+            )
+        }
+
 
 
         if first == "\"" {

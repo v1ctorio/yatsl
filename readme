@@ -1,5 +1,11 @@
 # some comment
 
 yet another toy scripting language
-que!"some string"
+que!["some string"]
+
+{ foo 
+bar {
+	baz
+	}
+}
 # another commment
