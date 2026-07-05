@@ -5,7 +5,7 @@ class Location {
     let file_path: String
     let row: Int 
     let col: Int 
-    init(f: String, r: Int, c: Int) {
+    init(_ f: String, _ r: Int, _ c: Int) {
         file_path = f
         row = r
         col = c
@@ -33,9 +33,13 @@ class Token {
     let kind: TokenKind
     let loc: Location
 
-    init(_kind: TokenKind, _value: String, _loc: Location) {
-        kind = _kind
-        loc = _loc
+    init(_ k: TokenKind, _ l: Location) {
+        kind = k
+        loc = l
+    }
+
+    func display() -> String {
+        return "\(kind)"
     }
 
 }
@@ -50,7 +54,7 @@ class Lexer {
     var row: Int
     var bol: Int
 
-    init(f: String, s: String) {
+    init(_ f: String, _ s: String) {
         file_path = f
         source = s 
         cur = 0
@@ -89,14 +93,16 @@ class Lexer {
     }
     
     func loc() -> Location {
-        return Location(f: file_path, r: row, c: cur - bol)
+        return Location(file_path, row, cur - bol)
     }
 
 
-    func next_token() {
+    func next_token() -> Token {
         trim_left()
         
         //TODO handle comments (drop line if it starts with #)
+        print("PANIC: NOTIMPLEMENTEDDDDDDDDDDDDD")
+        exit(69)
     }
 
 } 
@@ -114,7 +120,22 @@ func main() {
         exit(33)
     }
     print(source)
+
+    let lexer = Lexer(sourcefile, source)
+    let tokens = tokenize(lexer)
+    for token in tokens {
+        print(token.display())
+    }
 }
 
 
+func tokenize(_ lexer: Lexer) -> [Token] {
+    var tokens = [Token]()
+    while (!lexer.is_empty()) {
+        let tok = lexer.next_token()
+        tokens.append(tok)
+    }
+
+    return tokens 
+}  
 main()
