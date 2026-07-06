@@ -2,7 +2,6 @@ import Foundation
 
 //TODO use exceptions for lexing error and show pretty error msgs
 //TODO remove all debugP
-//TODO support for atom values (and parenthesis)
 
 
 extension Character {
@@ -132,7 +131,7 @@ class Lexer {
     }
 
 
-    func next_token() -> Token {
+    func next_token() throws -> Token {
         trim_left()
         
         if is_empty() {
@@ -174,7 +173,7 @@ class Lexer {
 
         if first.isLetter {
 
-            let val = consumeIdentifier(lexer: self)
+            let val = try consumeIdentifier(lexer: self)
             debugP("tokenized name: \(val)")
             
             var id_kind = IdentifierKind.Container
@@ -194,7 +193,7 @@ class Lexer {
             consume()
             assert(char().isValidIdentifierContent)
 
-            let id = consumeIdentifier(lexer: self)
+            let id = try consumeIdentifier(lexer: self)
             debugP("tokenized interfix: \(id)")
 
             return Token(
@@ -207,7 +206,7 @@ class Lexer {
             consume()
             assert(char().isValidIdentifierContent)
 
-            let id = consumeIdentifier(lexer: self)
+            let id = try consumeIdentifier(lexer: self)
             debugP("tokenized atom: .\(id)")
 
             return Token(
@@ -272,8 +271,12 @@ func main() {
 func tokenize(_ lexer: Lexer) -> [Token] {
     var tokens = [Token]()
     while (!lexer.is_empty()) {
-        let tok = lexer.next_token()
+        do {
+        let tok = try lexer.next_token() 
         tokens.append(tok)
+        } catch let err {
+            handleLexingError(error: err, lexer: lexer)
+        }
     }
 
     return tokens 
@@ -292,17 +295,17 @@ func debugP(_ msg: String) {
     print(msg)
 }
 
-func consumeIdentifier(lexer: Lexer) -> [String] {
+func consumeIdentifier(lexer: Lexer) throws(IdentifierConsumptionError) -> [String] {
     var id = [String]()
-    assert(!lexer.is_empty())
-    assert(lexer.char().isValidIdentifierContent)
+    guard !lexer.is_empty() else {throw .emptyIdentifier}
+    guard lexer.char().isValidIdentifierContent else {throw .invalidIdentifierContent }
     while !lexer.is_empty() {
-        let name = consumeName(lexer: lexer)
+        let name = try consumeName(lexer: lexer)
         id.append(name)
         if lexer.char() == ":" {
             lexer.consume()
-            assert(!lexer.is_empty())
-            assert(lexer.char() == ":", "expected a second colon after the first")
+            guard !lexer.is_empty() else { throw .expectedColonFoundEOF }
+            guard lexer.char() == ":" else { throw .expectedColonFoundChar } 
             lexer.consume()
         } else {
             break
@@ -312,9 +315,8 @@ func consumeIdentifier(lexer: Lexer) -> [String] {
     return id
 }
 
-func consumeName(lexer: Lexer) -> String {
-    assert(lexer.char().isValidIdentifierContent)
-    
+func consumeName(lexer: Lexer) throws(IdentifierConsumptionError) -> String {
+    guard lexer.char().isValidIdentifierContent else {throw .invalidIdentifierContent }
     let start_i = lexer.curI()
     while !lexer.is_empty() {
         let c = lexer.char()
@@ -324,4 +326,44 @@ func consumeName(lexer: Lexer) -> String {
 
     let name = String(lexer.source[start_i..<lexer.curI()])
     return name
+}
+
+func handleLexingError(error: Error, lexer: Lexer) -> Never {
+    //TODO print to stderr
+    print("--------------")
+    print("Exception thrown during token consumption")
+    print("--------------")
+    switch error {
+        case let error as IdentifierConsumptionError: 
+            let loc = lexer.loc()
+            let relevantPoc = lexer.source
+                .split(separator: "\n")[loc.row] 
+
+            print("""
+
+            \(loc.description)
+
+            \(relevantPoc)
+            \(String(repeating: " ", count: lexer.cur - lexer.bol))^
+
+            """)
+            switch error {
+                case .expectedColonFoundChar: 
+                    print("SyntaxError: expected `:`, found \(lexer.char())")
+                case .expectedColonFoundEOF: 
+                    print("SyntaxError: expected `:`, found EOF")
+                default:
+                    UNREACHABLE("")
+            }
+        default: 
+            print("idk gng")
+    }
+    exit(1)
+}
+
+enum IdentifierConsumptionError: Error {
+    case expectedColonFoundChar
+    case expectedColonFoundEOF
+    case emptyIdentifier
+    case invalidIdentifierContent
 }
