@@ -169,7 +169,6 @@ class Lexer {
             return Token(k, location)
         } 
 
-        //TODO extract address consumption into a general function
 
         if first.isLetter {
 
@@ -191,7 +190,6 @@ class Lexer {
 
         if first == "|" {
             consume()
-            assert(char().isValidIdentifierContent)
 
             let id = try consumeIdentifier(lexer: self)
             debugP("tokenized interfix: \(id)")
@@ -204,7 +202,6 @@ class Lexer {
 
         if first == "." {
             consume()
-            assert(char().isValidIdentifierContent)
 
             let id = try consumeIdentifier(lexer: self)
             debugP("tokenized atom: .\(id)")
@@ -228,7 +225,7 @@ class Lexer {
                 consume()
             }
             if is_empty() {
-                UNREACHABLE("ERROR: expected string, found EOF")
+                throw LexingError.expectedDoublequoteFoundEOF
             }
             let content = String(source[start_i..<curI()])
             consume()
@@ -236,7 +233,7 @@ class Lexer {
             return Token(.String(content:content),location)
         }
         
-        UNREACHABLE("not implemented first = \(first.asciiValue ?? 69)")
+        throw LexingError.unexpectedChar
     }
 
 } 
@@ -359,6 +356,11 @@ func handleLexingError(error: Error, lexer: Lexer) -> Never {
             print("idk gng")
     }
     exit(1)
+}
+
+enum LexingError: Error {
+    case expectedDoublequoteFoundEOF
+    case unexpectedChar
 }
 
 enum IdentifierConsumptionError: Error {
