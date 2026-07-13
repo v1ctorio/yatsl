@@ -172,7 +172,7 @@ class Lexer {
 
         if first.isLetter {
 
-            let val = try consumeIdentifier(lexer: self)
+            let val = try consumeIdentifier()
             debugP("tokenized name: \(val)")
             
             var id_kind = IdentifierKind.Container
@@ -191,7 +191,7 @@ class Lexer {
         if first == "|" {
             consume()
 
-            let id = try consumeIdentifier(lexer: self)
+            let id = try consumeIdentifier()
             debugP("tokenized interfix: \(id)")
 
             return Token(
@@ -203,7 +203,7 @@ class Lexer {
         if first == "." {
             consume()
 
-            let id = try consumeIdentifier(lexer: self)
+            let id = try consumeIdentifier()
             debugP("tokenized atom: .\(id)")
 
             return Token(
@@ -235,6 +235,39 @@ class Lexer {
         
         throw LexingError.unexpectedChar
     }
+    
+    func consumeIdentifier() throws(IdentifierConsumptionError) -> [String] {
+        var id = [String]()
+        guard !is_empty() else {throw .emptyIdentifier}
+        guard char().isValidIdentifierContent else {throw .invalidIdentifierContent }
+        while !is_empty() {
+            let name = try consumeName()
+            id.append(name)
+            if char() == ":" {
+                consume()
+                guard !is_empty() else { throw .expectedColonFoundEOF }
+                guard char() == ":" else { throw .expectedColonFoundChar } 
+                consume()
+            } else {
+                break
+            }
+        }
+
+        return id
+    }
+
+    func consumeName() throws(IdentifierConsumptionError) -> String {
+        guard char().isValidIdentifierContent else {throw .invalidIdentifierContent }
+        let start_i = curI()
+        while !is_empty() {
+            let c = char()
+            if (!c.isValidIdentifierContent) { break }
+            consume()
+        }
+
+        let name = String(source[start_i..<curI()])
+        return name
+    }
 
 } 
 
@@ -265,38 +298,6 @@ func debugP(_ msg: String) {
     print(msg)
 }
 
-func consumeIdentifier(lexer: Lexer) throws(IdentifierConsumptionError) -> [String] {
-    var id = [String]()
-    guard !lexer.is_empty() else {throw .emptyIdentifier}
-    guard lexer.char().isValidIdentifierContent else {throw .invalidIdentifierContent }
-    while !lexer.is_empty() {
-        let name = try consumeName(lexer: lexer)
-        id.append(name)
-        if lexer.char() == ":" {
-            lexer.consume()
-            guard !lexer.is_empty() else { throw .expectedColonFoundEOF }
-            guard lexer.char() == ":" else { throw .expectedColonFoundChar } 
-            lexer.consume()
-        } else {
-            break
-        }
-    }
-
-    return id
-}
-
-func consumeName(lexer: Lexer) throws(IdentifierConsumptionError) -> String {
-    guard lexer.char().isValidIdentifierContent else {throw .invalidIdentifierContent }
-    let start_i = lexer.curI()
-    while !lexer.is_empty() {
-        let c = lexer.char()
-        if (!c.isValidIdentifierContent) { break }
-        lexer.consume()
-    }
-
-    let name = String(lexer.source[start_i..<lexer.curI()])
-    return name
-}
 
 func handleLexingError(error: Error, lexer: Lexer) -> Never {
     //TODO print to stderr
