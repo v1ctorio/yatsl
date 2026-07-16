@@ -5,6 +5,7 @@ YATSL is a scripting language built with Swift. it's main intended purpose is to
 It does aim for ergonomics and clarity but not for performance (as of now).
 
 
+
 ## Language concepts
 To see a 'real world' example, check the example.yatsl
 
@@ -26,6 +27,8 @@ To see a 'real world' example, check the example.yatsl
 	- keword: `proc <identifier>!inputArr(?) <body>` / assigns a procedure to an identifier
 
 
+
+
 ## Building
 For now, the interpreter (well, lexer, for now) is intended to be built via swiftc.
 	1. Install the swift toolchain (https://www.swift.org/install) 
@@ -39,8 +42,15 @@ For now, the interpreter (well, lexer, for now) is intended to be built via swif
 	3. use the lexer on your YATSL file !
 		./yatsl example.yatsl
 		and see the tokens log !
-
----
+-----------------------
+STATIC BUILDS
+To build using the musl static sdk, first
+1. install the Static Linux SDK via the swift toolchain (you may also download it but uou'll have to edit the build script with the according folders)
+2. run the command in build-static.sh
+That's it! It will give you an executable, just as the 
+dynamic one except for it being like 20 times heavier
+(and static!)
+-----------------------
 Installing  just (https://github.com/casey/just)
 	it most likely is in your repos (apt install just; pacman -S just; ...)
 	or you can just install it through npm :skull: (npm install -g rust-just)
