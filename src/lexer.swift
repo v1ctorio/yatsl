@@ -95,6 +95,9 @@ class Lexer {
     }
 
     func char()->Character {
+        if is_empty() {
+            return "\n"
+        }
         return source[curI()]
     } 
 
