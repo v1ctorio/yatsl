@@ -6,7 +6,7 @@ import Foundation
 
 extension Character {
     var isValidIdentifierContent: Bool {
-        return (self.isLetter || self.isNumber || self.isSymbol || self == "_") && self != "!" && self != "|" && self != "."
+        return (self.isLetter || self.isNumber || self.isSymbol || self == "_" || self == "*") && self != "!" && self != "|" && self != "."
     } 
 }
 
@@ -36,6 +36,7 @@ enum IdentifierKind {
 enum TokenKind {
     case Identifier(addr: [String], kind: IdentifierKind) // array for namespaces. `foo::bar` == ['foo','bar']
     case     String(content: String)
+    case    Integer(value: Int)
     case      Colon
     case     LCurly
     case     RCurly
@@ -232,6 +233,20 @@ class Lexer {
 
             return Token(.String(content:content),location)
         }
+
+        if first.isNumber {
+            let start_i = curI()
+
+            while !is_empty() {
+                let c = char()
+                //TODO support for floats and _ separators
+                if !c.isNumber { break }
+                consume()
+            }
+            guard let content = Int(source[start_i..<curI()]) 
+                                else {throw LexingError.numberParsing }
+            return Token(.Integer(value:content),location) 
+        }
         
         throw LexingError.unexpectedChar
     }
@@ -335,6 +350,7 @@ func handleLexingError(error: Error, lexer: Lexer) -> Never {
 enum LexingError: Error {
     case expectedDoublequoteFoundEOF
     case unexpectedChar
+    case numberParsing
 }
 
 enum IdentifierConsumptionError: Error {
